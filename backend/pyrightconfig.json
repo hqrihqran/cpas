@@ -1,0 +1,13 @@
+{
+  "include": ["app", "run.py", "config.py"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "extraPaths": [
+    ".",
+    "./app"
+  ],
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none"
+}
