@@ -1,6 +1,13 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
-export type UserRole = "admin" | "placement_officer" | "faculty" | "student" | "management" | "company";
+export type UserRole =
+  | "admin"
+  | "placement_officer"
+  | "faculty"
+  | "student"
+  | "management"
+  | "company";
 
 interface RoleContextType {
   role: UserRole;
@@ -20,10 +27,24 @@ const roleNames: Record<UserRole, string> = {
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<UserRole>("student");
+  const { user } = useAuth();
+
+  // Derive role from authenticated user; fall back to "student" for demo
+  const [role, setRole] = useState<UserRole>(
+    (user?.role as UserRole) ?? "student"
+  );
+
+  // Keep role in sync when the user logs in / logs out
+  useEffect(() => {
+    if (user?.role) {
+      setRole(user.role as UserRole);
+    } else {
+      setRole("student");
+    }
+  }, [user]);
 
   return (
-    <RoleContext.Provider value={{ role, setRole, roleName: roleNames[role] }}>
+    <RoleContext.Provider value={{ role, setRole, roleName: roleNames[role] ?? role }}>
       {children}
     </RoleContext.Provider>
   );

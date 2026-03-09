@@ -2,9 +2,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+// Pages
+import LoginSignup from "./pages/LoginSignup";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -25,26 +30,111 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <RoleProvider>
+      {/*
+        Providers order:
+          AuthProvider  → manages JWT tokens & user
+          RoleProvider  → reads user.role and exposes setRole for UI overrides
+      */}
+      <AuthProvider>
         <BrowserRouter>
-          <DashboardLayout>
+          <RoleProvider>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/home" element={<Index />} />
-              <Route path="/student-dashboard" element={<StudentDashboard />} />
-              <Route path="/applications" element={<MyApplications />} />
-              <Route path="/interviews" element={<Interviews />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/students" element={<Students />} />
-              <Route path="/companies" element={<Companies />} />
-              <Route path="/data-management" element={<DataManagement />} />
-              <Route path="/reports" element={<Reports />} />
+              <Route path="/login" element={<LoginSignup />} />
+
+              {/* Protected: any authenticated user */}
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout><Index /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student-dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout><StudentDashboard /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/applications"
+                element={
+                  <ProtectedRoute allowedRoles={["student"]}>
+                    <DashboardLayout><MyApplications /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/interviews"
+                element={
+                  <ProtectedRoute allowedRoles={["student", "faculty"]}>
+                    <DashboardLayout><Interviews /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/projects"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout><Projects /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Faculty + Admin + Management */}
+              <Route
+                path="/students"
+                element={
+                  <ProtectedRoute allowedRoles={["faculty", "admin", "management"]}>
+                    <DashboardLayout><Students /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/companies"
+                element={
+                  <ProtectedRoute allowedRoles={["faculty", "admin", "management", "company"]}>
+                    <DashboardLayout><Companies /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute allowedRoles={["faculty", "admin", "management"]}>
+                    <DashboardLayout><Analytics /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute allowedRoles={["faculty", "admin", "management"]}>
+                    <DashboardLayout><Reports /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin only */}
+              <Route
+                path="/data-management"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <DashboardLayout><DataManagement /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </DashboardLayout>
+          </RoleProvider>
         </BrowserRouter>
-      </RoleProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
