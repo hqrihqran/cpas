@@ -13,10 +13,13 @@ import {
     Building2,
     Users,
     Check,
-    FileText
+    FileText,
+    LogOut,
+    Settings,
 } from "lucide-react";
 
 import { useRole, UserRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -81,6 +84,7 @@ export function TopNavigation() {
     const location = useLocation();
     const navigate = useNavigate();
     const { role } = useRole();
+    const { user, logout } = useAuth();
     const [activeIndex, setActiveIndex] = useState(0);
     const [scrolled, setScrolled] = useState(false);
 
@@ -120,7 +124,6 @@ export function TopNavigation() {
         const fullPath = location.pathname + location.search;
         let index = navItems.findIndex(item => item.href === fullPath);
         if (index === -1) {
-            // fallback for exact pathname without search
             index = navItems.findIndex(item => item.href.split('?')[0] === location.pathname);
         }
         if (index !== -1) {
@@ -132,6 +135,16 @@ export function TopNavigation() {
         setActiveIndex(index);
         navigate(href);
     };
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login", { replace: true });
+    };
+
+    // Derive avatar initials from real user
+    const initials = user?.full_name
+        ? user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+        : "?";
 
     return (
         <header
@@ -153,8 +166,7 @@ export function TopNavigation() {
                     </span>
                 </Link>
 
-                {/* Center: The "BottomNavBar" Pill */}
-                {/* Positioned absolutely to center relative to the container */}
+                {/* Center: Nav Pill */}
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block z-0">
                     <motion.nav
                         initial={{ scale: 0.9, opacity: 0, y: -10 }}
@@ -222,21 +234,54 @@ export function TopNavigation() {
                         <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background" />
                     </Button>
 
-                    <div className="hidden md:block">
-                        <RoleSwitcher />
-                    </div>
-
                     <ModeToggle />
 
-                    <div className="flex items-center gap-3 pl-2 border-l border-muted">
-                        <Avatar className="h-9 w-9 border-2 border-background ring-2 ring-muted cursor-pointer hover:ring-primary/50 transition-all">
-                            <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold">HA</AvatarFallback>
-                        </Avatar>
-                    </div>
+                    {/* User avatar + dropdown */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-2 pl-2 border-l border-muted focus:outline-none">
+                                <Avatar className="h-9 w-9 border-2 border-background ring-2 ring-muted cursor-pointer hover:ring-primary/50 transition-all">
+                                    <AvatarImage src={undefined} alt={user?.full_name ?? "User"} />
+                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                                        {initials}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="hidden lg:flex flex-col items-start">
+                                    <span className="text-xs font-semibold leading-tight text-foreground max-w-[90px] truncate">
+                                        {user?.full_name ?? "Guest"}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground capitalize">
+                                        {user?.role ?? ""}
+                                    </span>
+                                </div>
+                                <ChevronDown className="h-3 w-3 text-muted-foreground hidden lg:block" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel className="font-normal">
+                                <div className="flex flex-col space-y-0.5">
+                                    <span className="font-semibold text-sm">{user?.full_name ?? "Guest"}</span>
+                                    <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="gap-2 cursor-pointer">
+                                <Settings className="h-4 w-4" />
+                                Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                id="logout-btn"
+                                className="gap-2 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="h-4 w-4" />
+                                Log out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>
     );
 }
-

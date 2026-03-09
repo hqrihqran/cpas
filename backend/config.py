@@ -21,6 +21,9 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
     DEBUG      = os.getenv("FLASK_DEBUG", "true").lower() == "true"
 
+    # ─── Google OAuth ─────────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+
     # ─── CORS ────────────────────────────────────────────────────────────────
     CORS_ORIGINS = os.getenv(
         "CORS_ORIGINS",

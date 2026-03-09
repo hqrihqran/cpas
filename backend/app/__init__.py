@@ -25,6 +25,7 @@ def create_app(env: str = "default") -> Flask:
     from .routes.analytics    import analytics_bp
     from .routes.departments  import departments_bp
     from .routes.users        import users_bp
+    from .routes.auth         import auth_bp
 
     app.register_blueprint(students_bp,     url_prefix="/api/students")
     app.register_blueprint(companies_bp,    url_prefix="/api/companies")
@@ -34,6 +35,7 @@ def create_app(env: str = "default") -> Flask:
     app.register_blueprint(analytics_bp,   url_prefix="/api/analytics")
     app.register_blueprint(departments_bp,  url_prefix="/api/departments")
     app.register_blueprint(users_bp,        url_prefix="/api/users")
+    app.register_blueprint(auth_bp,         url_prefix="/api/auth")
 
     # ── Health check ─────────────────────────────────────────────────────────
     @app.route("/api/health")
