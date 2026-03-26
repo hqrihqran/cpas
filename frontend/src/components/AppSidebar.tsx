@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, BarChart3, Users, FileText, Database, ChevronDown, GraduationCap, Building2, ShieldCheck, UserCog,
+  LayoutDashboard, BarChart3, Users, FileText, Database, ChevronDown, GraduationCap, Building2, ShieldCheck, UserCog, GitBranch, Presentation,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useRole, UserRole } from "@/contexts/RoleContext";
@@ -44,11 +44,13 @@ const navItems: Record<UserRole, { title: string; url: string; icon: any }[]> = 
   ],
   student: [
     { title: "Dashboard", url: "/student-dashboard", icon: LayoutDashboard },
+    { title: "Pipelined", url: "/pipelined", icon: GitBranch },
     { title: "My Applications", url: "/applications", icon: FileText },
     { title: "Interviews", url: "/interviews", icon: Users },
   ],
   management: [
-    { title: "Dashboard", url: "/analytics", icon: LayoutDashboard }, // Management lands on Analytics
+    { title: "Dashboard", url: "/analytics", icon: LayoutDashboard },
+    { title: "Skill Gap & Trainings", url: "/skill-gap", icon: Presentation },
     { title: "Overall Stats", url: "/analytics", icon: BarChart3 },
     { title: "Placement Reports", url: "/reports", icon: FileText },
   ],

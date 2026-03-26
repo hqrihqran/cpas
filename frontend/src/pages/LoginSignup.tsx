@@ -84,13 +84,13 @@ function GoogleRoleModal({ googleName, googleEmail, onConfirm, onCancel, loading
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
                     transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                    className="w-full max-w-md bg-slate-900 border border-white/10 rounded-3xl p-8 shadow-2xl shadow-black/60"
+                    className="w-full max-w-md bg-card border border-border rounded-3xl p-8 shadow-sm shadow-black/60 dark:bg-slate-900"
                 >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-6">
                         <div>
-                            <h3 className="text-xl font-bold text-white">Choose your role</h3>
-                            <p className="text-slate-400 text-sm mt-1">
+                            <h3 className="text-xl font-bold text-foreground">Choose your role</h3>
+                            <p className="text-muted-foreground text-sm mt-1">
                                 Welcome, <span className="text-indigo-400 font-medium">{googleName}</span>!<br />
                                 <span className="text-slate-500 text-xs">{googleEmail}</span>
                             </p>
@@ -123,10 +123,10 @@ function GoogleRoleModal({ googleName, googleEmail, onConfirm, onCancel, loading
                                         <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-indigo-400" />
                                     )}
                                     <div className="text-2xl mb-2">{r.icon}</div>
-                                    <div className={`font-semibold text-sm ${isSelected ? "text-indigo-300" : "text-white"}`}>
+                                    <div className={`font-semibold text-sm ${isSelected ? "text-primary" : "text-foreground"}`}>
                                         {r.label}
                                     </div>
-                                    <div className="text-slate-500 text-xs mt-0.5">{r.desc}</div>
+                                    <div className="text-muted-foreground text-xs mt-0.5">{r.desc}</div>
                                 </button>
                             );
                         })}
@@ -137,7 +137,7 @@ function GoogleRoleModal({ googleName, googleEmail, onConfirm, onCancel, loading
                         <Button
                             variant="ghost"
                             onClick={onCancel}
-                            className="flex-1 border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl"
+                            className="flex-1 border border-border text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl"
                         >
                             Cancel
                         </Button>
@@ -271,7 +271,7 @@ export default function LoginSignup() {
 
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <div className="min-h-screen w-full flex relative bg-slate-950 text-white">
+            <div className="min-h-screen w-full flex relative bg-background text-foreground transition-colors duration-300">
                 <BlobBg />
 
                 {/* Google Role Picker Modal */}
@@ -292,7 +292,7 @@ export default function LoginSignup() {
                         <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                             <GraduationCap className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
                             Campus Compass
                         </span>
                     </Link>
@@ -349,16 +349,16 @@ export default function LoginSignup() {
                                     transition={{ delay: 0.4 + i * 0.08 }}
                                     className="flex items-center gap-3"
                                 >
-                                    <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                                        <Icon className="h-4 w-4 text-indigo-400" />
+                                    <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                        <Icon className="h-4 w-4 text-primary" />
                                     </div>
-                                    <span className="text-slate-300 text-sm">{text}</span>
+                                    <span className="text-muted-foreground text-sm">{text}</span>
                                 </motion.li>
                             ))}
                         </motion.ul>
                     </div>
 
-                    <p className="text-slate-600 text-xs">
+                    <p className="text-muted-foreground text-xs">
                         © {new Date().getFullYear()} Campus Compass. All rights reserved.
                     </p>
                 </div>
@@ -372,18 +372,18 @@ export default function LoginSignup() {
                         className="w-full max-w-md"
                     >
                         {/* Card */}
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl shadow-black/40">
+                        <div className="glass-panel backdrop-blur-xl border border-border/50 rounded-3xl p-8 shadow-sm">
 
                             {/* Mobile logo */}
                             <div className="flex lg:hidden items-center gap-2 mb-6">
                                 <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center">
                                     <GraduationCap className="h-5 w-5 text-white" />
                                 </div>
-                                <span className="font-bold text-white">Campus Compass</span>
+                                <span className="font-bold text-foreground">Campus Compass</span>
                             </div>
 
                             {/* Tab switcher */}
-                            <div className="relative flex bg-white/5 rounded-2xl p-1 mb-8">
+                            <div className="relative flex bg-secondary/50 rounded-2xl p-1 mb-8">
                                 <motion.div
                                     layoutId="tab-bg"
                                     className="absolute inset-y-1 rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30"
@@ -395,7 +395,7 @@ export default function LoginSignup() {
                                     <button
                                         key={t}
                                         onClick={() => setTab(t)}
-                                        className={`relative z-10 flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors ${tab === t ? "text-white" : "text-slate-400 hover:text-slate-200"
+                                        className={`relative z-10 flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors ${tab === t ? "text-white" : "text-muted-foreground hover:text-foreground"
                                             }`}
                                     >
                                         {t === "login" ? "Sign In" : "Sign Up"}
@@ -412,10 +412,10 @@ export default function LoginSignup() {
                                     exit={{ opacity: 0, y: -8 }}
                                     transition={{ duration: 0.18 }}
                                 >
-                                    <h2 className="text-2xl font-bold text-white mb-1">
+                                    <h2 className="text-2xl font-bold text-foreground mb-1">
                                         {tab === "login" ? "Welcome back" : "Create your account"}
                                     </h2>
-                                    <p className="text-slate-400 text-sm mb-6">
+                                    <p className="text-muted-foreground text-sm mb-6">
                                         {tab === "login"
                                             ? "Sign in to your Campus Compass account"
                                             : "Join Campus Compass today"}
@@ -423,12 +423,12 @@ export default function LoginSignup() {
 
                                     {/* ── Form ── */}
                                     <form onSubmit={handleSubmit} className="space-y-4">
-                                        {/* Name (signup only) */}
+                                         {/* Name (signup only) */}
                                         {tab === "signup" && (
                                             <div className="space-y-1.5">
-                                                <Label className="text-slate-300 text-xs font-medium">Full Name</Label>
+                                                <Label className="text-muted-foreground text-xs font-medium">Full Name</Label>
                                                 <div className="relative">
-                                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                                     <Input
                                                         id="full_name"
                                                         type="text"
@@ -436,7 +436,7 @@ export default function LoginSignup() {
                                                         value={fullName}
                                                         onChange={e => setFullName(e.target.value)}
                                                         required
-                                                        className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl"
+                                                        className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
                                                     />
                                                 </div>
                                             </div>
@@ -444,9 +444,9 @@ export default function LoginSignup() {
 
                                         {/* Email */}
                                         <div className="space-y-1.5">
-                                            <Label className="text-slate-300 text-xs font-medium">Email Address</Label>
+                                            <Label className="text-muted-foreground text-xs font-medium">Email Address</Label>
                                             <div className="relative">
-                                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                                 <Input
                                                     id="email"
                                                     type="email"
@@ -454,16 +454,16 @@ export default function LoginSignup() {
                                                     value={email}
                                                     onChange={e => setEmail(e.target.value)}
                                                     required
-                                                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl"
+                                                    className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
                                                 />
                                             </div>
                                         </div>
 
                                         {/* Password */}
                                         <div className="space-y-1.5">
-                                            <Label className="text-slate-300 text-xs font-medium">Password</Label>
+                                            <Label className="text-muted-foreground text-xs font-medium">Password</Label>
                                             <div className="relative">
-                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                                 <Input
                                                     id="password"
                                                     type={showPassword ? "text" : "password"}
@@ -471,12 +471,12 @@ export default function LoginSignup() {
                                                     value={password}
                                                     onChange={e => setPassword(e.target.value)}
                                                     required
-                                                    className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl"
+                                                    className="pl-10 pr-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(p => !p)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                                 >
                                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                                 </button>
@@ -487,9 +487,9 @@ export default function LoginSignup() {
                                         {tab === "signup" && (
                                             <>
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-slate-300 text-xs font-medium">Confirm Password</Label>
+                                                    <Label className="text-muted-foreground text-xs font-medium">Confirm Password</Label>
                                                     <div className="relative">
-                                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                                         <Input
                                                             id="confirm_password"
                                                             type={showPassword ? "text" : "password"}
@@ -497,26 +497,26 @@ export default function LoginSignup() {
                                                             value={confirmPassword}
                                                             onChange={e => setConfirm(e.target.value)}
                                                             required
-                                                            className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl"
+                                                            className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-slate-300 text-xs font-medium">Role</Label>
+                                                    <Label className="text-muted-foreground text-xs font-medium">Role</Label>
                                                     <Select value={role} onValueChange={setRole}>
                                                         <SelectTrigger
                                                             id="role"
-                                                            className="bg-white/5 border-white/10 text-white focus:ring-indigo-500/20 rounded-xl"
+                                                            className="bg-background/50 border-input text-foreground focus:ring-primary/20 rounded-xl"
                                                         >
                                                             <SelectValue placeholder="Select your role" />
                                                         </SelectTrigger>
-                                                        <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                        <SelectContent className="bg-popover border-border text-popover-foreground">
                                                             {SIGNUP_ROLES.map(r => (
                                                                 <SelectItem
                                                                     key={r.value}
                                                                     value={r.value}
-                                                                    className="focus:bg-indigo-600/20 focus:text-white"
+                                                                    className="focus:bg-primary/20 focus:text-foreground"
                                                                 >
                                                                     {r.icon} {r.label}
                                                                 </SelectItem>
@@ -563,10 +563,10 @@ export default function LoginSignup() {
                                     {/* Divider */}
                                     <div className="relative my-5">
                                         <div className="absolute inset-0 flex items-center">
-                                            <div className="w-full border-t border-white/10" />
+                                            <div className="w-full border-t border-border" />
                                         </div>
                                         <div className="relative flex justify-center text-xs">
-                                            <span className="px-3 bg-transparent text-slate-500">or continue with</span>
+                                            <span className="px-3 bg-card text-muted-foreground">or continue with</span>
                                         </div>
                                     </div>
 
@@ -584,7 +584,7 @@ export default function LoginSignup() {
                                                 text={tab === "login" ? "signin_with" : "signup_with"}
                                             />
                                         ) : (
-                                            <div className="w-full flex items-center justify-center gap-3 h-11 bg-white/5 border border-white/10 rounded-xl text-slate-400 text-sm cursor-not-allowed select-none">
+                                            <div className="w-full flex items-center justify-center gap-3 h-11 bg-background/50 border border-border rounded-xl text-muted-foreground text-sm cursor-not-allowed select-none">
                                                 <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0">
                                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

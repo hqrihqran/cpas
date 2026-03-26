@@ -8,6 +8,7 @@ Front-end consumers:
 """
 from flask import Blueprint, request, jsonify
 from ..db import query_db, execute_db
+from ..notifications import save_and_emit
 
 homework_bp = Blueprint("homework", __name__)
 
@@ -82,8 +83,38 @@ def create_task():
         data.get("deadline"),
         data.get("faculty_id"),
     ))
-    for sid in data.get("assigned_to", []):
+    assigned_to = data.get("assigned_to", [])
+    for sid in assigned_to:
         execute_db("INSERT INTO homework_assigned (task_id, student_id) VALUES (%s,%s)", (task_id, sid))
+
+    # ── Emit a targeted notification to each assigned mentee ────────────────
+    # Look up the user_id for each student_id so we can target the
+    # correct socket room ("user_<user_id>") and store the correct FK.
+    for sid in assigned_to:
+        try:
+            student_user = query_db(
+                "SELECT id FROM users WHERE student_id = %s LIMIT 1",
+                (sid,),
+                one=True,
+            )
+            target_user_id = student_user["id"] if student_user else None
+
+            save_and_emit(
+                event="new_notification",
+                notif_type="Task",
+                title=f"New Task Assigned: {data['title']}",
+                message=(
+                    f"You have been assigned a new task: \"{data['title']}\". "
+                    + (f"Deadline: {data['deadline']}" if data.get('deadline') else "")
+                ),
+                user_id=target_user_id,
+                target_role=None,            # personal, not a broadcast
+                room=f"user_{target_user_id}" if target_user_id else None,
+                broadcast=(target_user_id is None),
+            )
+        except Exception as e:
+            print(f"[Notifications] Failed to emit new_task for student {sid}: {e}")
+
     return jsonify({"message": "Task created", "id": task_id}), 201
 
 

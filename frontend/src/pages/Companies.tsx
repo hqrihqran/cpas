@@ -32,18 +32,19 @@ export default function Companies() {
           <h3 className="text-sm font-semibold text-card-foreground mb-4">Offers by Company</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={sorted} layout="vertical" margin={{ top: 5, right: 20, left: 60, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 32%, 91%)" />
-              <XAxis type="number" tick={{ fontSize: 12 }} stroke="hsl(215, 16%, 47%)" />
-              <YAxis dataKey="company" type="category" tick={{ fontSize: 12 }} stroke="hsl(215, 16%, 47%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis dataKey="company" type="category" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(214, 32%, 91%)",
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
                   fontSize: 12,
+                  color: "hsl(var(--card-foreground))",
                 }}
               />
-              <Bar dataKey="offers" fill="hsl(221, 83%, 53%)" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="offers" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

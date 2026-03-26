@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { io } from "socket.io-client";
 import { EligibilitySection } from "@/components/student/EligibilitySection";
 import { ScheduleCalendar } from "@/components/student/ScheduleCalendar";
 import { ActiveProcessTracker } from "@/components/student/ActiveProcessTracker";
@@ -8,23 +10,101 @@ import { mockHomeworkTasks, completeTask } from "@/data/mockData";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 import confetti from "canvas-confetti";
 
 export function StudentView() {
     const studentSkills = ["Coding", "Aptitude", "Communication", "Technical", "Design"];
 
-    // Using mock user ID "1" for demonstration
-    const [tasks, setTasks] = useState(mockHomeworkTasks.filter(t => t.assignedTo.includes("1")));
+    const { user, isAuthenticated } = useAuth();
+    const [tasks, setTasks] = useState<any[]>([]);
+    const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
     const [animatingId, setAnimatingId] = useState<string | null>(null);
 
-    useEffect(() => {
-        const handleUpdate = () => setTasks(mockHomeworkTasks.filter(t => t.assignedTo.includes("1")));
-        window.addEventListener("tasksUpdated", handleUpdate);
-        return () => window.removeEventListener("tasksUpdated", handleUpdate);
-    }, []);
+    // Fetch real tasks from backend
+    const fetchTasks = async () => {
+        if (!user?.student_id) return;
+        try {
+            const res = await fetch(`/api/homework?student_id=${user.student_id}`, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("cpas_tokens") ? JSON.parse(localStorage.getItem("cpas_tokens") as string).access_token : ""}`
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setTasks(data);
+            }
+        } catch (e) {
+            console.error("Failed to fetch tasks", e);
+        }
+    };
 
-    const handleMarkDone = (taskId: string, e: React.MouseEvent) => {
+    const fetchCalendarEvents = async () => {
+        if (!user?.student_id) return;
+        try {
+            const res = await fetch(`/api/student/calendar-events/${user.student_id}`, {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("cpas_tokens") ? JSON.parse(localStorage.getItem("cpas_tokens") as string).access_token : ""}`
+                }
+            });
+            console.log("Calendar events response status:", res.status);
+            if (res.ok) {
+                const data = await res.json();
+                console.log("Calendar events fetched data:", data);
+                setCalendarEvents(data);
+            } else {
+                console.error("Calendar API returned error:", await res.text());
+            }
+        } catch (e) {
+            console.error("Failed to fetch calendar events", e);
+        }
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchTasks();
+            fetchCalendarEvents();
+
+            // Listen for socket events directly
+            const socketUrl = import.meta.env.VITE_API_URL || undefined;
+            const token = localStorage.getItem("cpas_tokens") ? JSON.parse(localStorage.getItem("cpas_tokens") as string).access_token : "";
+            const socket = io(socketUrl as string, {
+                path: '/socket.io',
+                transports: ['websocket', 'polling'],
+                auth: { token },
+                query: { token }
+            });
+
+            socket.on("new_notification", (data: any) => {
+                // If it's a task specifically, auto-refresh the list
+                if (data.type && data.type.toLowerCase() === 'task') {
+                    fetchTasks();
+                }
+            });
+
+            socket.on("new_task_assigned", (newTask: any) => {
+                setTasks(prev => [newTask, ...prev]);
+                toast.success("New Task Assigned by Mentor!", {
+                    description: newTask.title,
+                    position: "top-right",
+                });
+            });
+
+            socket.on("task_deleted", (deletedTask: any) => {
+                setTasks(prev => prev.filter(t => t.id !== deletedTask.id));
+            });
+
+            return () => {
+                socket.off("new_notification");
+                socket.off("new_task_assigned");
+                socket.off("task_deleted");
+                socket.disconnect();
+            };
+        }
+    }, [isAuthenticated, user?.student_id]);
+
+    const handleMarkDone = async (taskId: string, e: React.MouseEvent) => {
         // Trigger confetti from the button's position
         const rect = (e.target as HTMLElement).getBoundingClientRect();
         const x = (rect.left + rect.width / 2) / window.innerWidth;
@@ -38,24 +118,38 @@ export function StudentView() {
         });
 
         setAnimatingId(taskId);
+
+        // Push completion to backend
+        try {
+            await fetch(`/api/homework/${taskId}/complete`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("cpas_tokens") ? JSON.parse(localStorage.getItem("cpas_tokens") as string).access_token : ""}`
+                },
+                body: JSON.stringify({ student_id: user?.student_id })
+            });
+        } catch (err) {
+            console.error(err);
+        }
+
         setTimeout(() => {
-            completeTask(taskId, "1");
+            fetchTasks(); // Reload rather than mock update
             setAnimatingId(null);
         }, 1000);
     };
 
-    const visibleTasks = tasks.filter(task => !task.completedBy.includes("1") || animatingId === task.id);
+    const visibleTasks = tasks.filter(task => (!task.completed_by || !task.completed_by.includes(String(user?.student_id))) || animatingId === String(task.id));
 
     return (
-        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in p-6 lg:p-8 items-start">
+        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in p-6 lg:p-8 pt-0 lg:pt-0 items-start">
             {/* Main Content Area (Center) - Spans 9 cols */}
             <div className="lg:col-span-8 flex flex-col gap-8">
                 {/* Greeting */}
                 <div className="flex flex-col gap-1 px-1">
-                    <h1 className="text-3xl font-extrabold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 w-fit">
-                        <br></br>Hi, Hariharan A
+                    <h1 className="text-3xl font-extrabold text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 w-fit">
+                        Hi, {(user as any)?.displayName || (user as any)?.givenName || user?.full_name || "Student"}
                     </h1>
-
                 </div>
 
                 {/* Performance & Skills Bento Box */}
@@ -84,7 +178,7 @@ export function StudentView() {
                 </div>
 
                 {/* Tasks from Mentor */}
-                <div className="w-full">
+                <div className="w-full" id="tasks-from-mentor">
                     <div className="glass-panel rounded-2xl border border-white/20 bg-card/40 backdrop-blur-md p-6 shadow-sm hover:shadow-md transition-all">
                         <h3 className="font-semibold text-xl mb-6 flex items-center gap-2">
                             <span className="w-1 h-6 bg-primary rounded-full"></span>
@@ -92,8 +186,8 @@ export function StudentView() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {visibleTasks.length > 0 ? visibleTasks.map(task => {
-                                const isCompleted = task.completedBy.includes("1") || animatingId === task.id;
-                                const isAnimating = animatingId === task.id;
+                                const isCompleted = (task.completed_by && task.completed_by.includes(String(user?.student_id))) || animatingId === String(task.id);
+                                const isAnimating = animatingId === String(task.id);
 
                                 return (
                                     <div
@@ -160,7 +254,7 @@ export function StudentView() {
                         <span className="w-1 h-6 bg-primary rounded-full"></span>
                         Upcoming Schedule
                     </h3>
-                    <ScheduleCalendar />
+                    <ScheduleCalendar tasks={calendarEvents} />
                 </div>
             </div>
         </div>

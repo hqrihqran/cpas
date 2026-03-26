@@ -83,6 +83,61 @@ export const students: Student[] = [
   { id: "12", name: "Kavya Menon", rollNo: "CSBS2021009", branch: "CSBS", batch: "2024", cgpa: 8.7, skills: ["Data Science", "R", "SQL"], internship: "McKinsey", placementStatus: "Placed", company: "Deloitte", ctc: 12.0, eventDate: "2024-01-20", historyOfArrears: 0, currentArrears: 0 },
 ];
 
+export interface PipelinedCompany {
+  id: string;
+  name: string;
+  logo: string;
+  driveDate: Date;
+  skills: string[];
+  minGpa: number;
+  pdfUrl?: string;
+  experienceYear: number;
+  description: string;
+}
+
+export const pipelinedCompanies: PipelinedCompany[] = [
+  {
+    id: "pc-1",
+    name: "Apple Inc.",
+    logo: "A",
+    driveDate: new Date(2025, 4, 15),
+    skills: ["Swift", "iOS Development", "UIKit", "C++"],
+    minGpa: 8.0,
+    experienceYear: 2025,
+    description: "Designing the next generation of consumer electronics and software services.",
+  },
+  {
+    id: "pc-2",
+    name: "Google",
+    logo: "G",
+    driveDate: new Date(2025, 4, 22),
+    skills: ["Go", "Distributed Systems", "GCP", "ML/AI"],
+    minGpa: 8.5,
+    experienceYear: 2024,
+    description: "Organizing the world's information and making it universally accessible and useful.",
+  },
+  {
+    id: "pc-3",
+    name: "Meta",
+    logo: "M",
+    driveDate: new Date(2025, 5, 2),
+    skills: ["React", "State Management", "System Design", "GraphQL"],
+    minGpa: 8.0,
+    experienceYear: 2025,
+    description: "Giving people the power to build community and bring the world closer together.",
+  },
+  {
+    id: "pc-4",
+    name: "Stripe",
+    logo: "S",
+    driveDate: new Date(2025, 5, 12),
+    skills: ["Ruby", "API Design", "Distributed Computing", "SQL"],
+    minGpa: 7.5,
+    experienceYear: 2024,
+    description: "Building the economic infrastructure for the internet.",
+  },
+];
+
 export interface HomeworkTask {
   id: string;
   title: string;

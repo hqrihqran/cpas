@@ -24,7 +24,7 @@ const Index = () => {
             return (
                 <div className="space-y-6 animate-fade-in">
                     <div className="flex flex-col gap-2">
-                        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+                        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                         <p className="text-muted-foreground">
                             Overview of system performance and placement activities.
                         </p>

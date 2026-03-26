@@ -16,22 +16,19 @@ import {
 } from "recharts";
 
 const CHART_COLORS = [
-  "hsl(221, 83%, 53%)",
-  "hsl(199, 89%, 48%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(262, 83%, 58%)",
-  "hsl(0, 84%, 60%)",
-  "hsl(221, 83%, 40%)",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
 ];
 
 const FUNNEL_COLORS = [
-  "hsl(221, 83%, 53%)",
-  "hsl(221, 83%, 48%)",
-  "hsl(221, 83%, 43%)",
-  "hsl(221, 83%, 38%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(142, 71%, 40%)",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
 ];
 
 const totalPlaced = departmentPlacements.reduce((a, b) => a + b.placed, 0);
@@ -84,15 +81,16 @@ export default function Dashboard() {
           <h3 className="text-sm font-semibold text-card-foreground mb-4">Department-wise Placements</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={departmentPlacements} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 32%, 91%)" />
-              <XAxis dataKey="department" tick={{ fontSize: 12 }} stroke="hsl(215, 16%, 47%)" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(215, 16%, 47%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="department" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(214, 32%, 91%)",
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
                   fontSize: 12,
+                  color: "hsl(var(--card-foreground))",
                 }}
               />
               <Bar dataKey="placed" name="Placed" radius={[4, 4, 0, 0]}>
@@ -110,18 +108,19 @@ export default function Dashboard() {
             <FunnelChart>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(214, 32%, 91%)",
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
                   fontSize: 12,
+                  color: "hsl(var(--card-foreground))",
                 }}
               />
               <Funnel dataKey="count" data={selectionFunnelData} isAnimationActive>
                 {selectionFunnelData.map((_, i) => (
                   <Cell key={i} fill={FUNNEL_COLORS[i]} />
                 ))}
-                <LabelList position="right" fill="hsl(215, 16%, 47%)" fontSize={12} dataKey="stage" />
-                <LabelList position="center" fill="white" fontSize={13} fontWeight={600} dataKey="count" />
+                <LabelList position="right" fill="hsl(var(--muted-foreground))" fontSize={12} dataKey="stage" />
+                <LabelList position="center" fill="hsl(var(--card))" fontSize={13} fontWeight={600} dataKey="count" />
               </Funnel>
             </FunnelChart>
           </ResponsiveContainer>

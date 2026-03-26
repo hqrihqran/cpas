@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -15,15 +15,17 @@ import {
     Check,
     FileText,
     LogOut,
-    Settings,
+    GitBranch,
+    Presentation
 } from "lucide-react";
 
-import { useRole, UserRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRole, UserRole } from "@/contexts/RoleContext";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { NotificationPopover } from "./NotificationPopover";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -35,8 +37,27 @@ import {
 
 const MOBILE_LABEL_WIDTH = 90;
 
+function useClickOutside(ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) {
+    useEffect(() => {
+        const listener = (event: MouseEvent | TouchEvent) => {
+            if (!ref.current || ref.current.contains(event.target as Node)) {
+                return;
+            }
+            handler(event);
+        };
+        document.addEventListener("mousedown", listener);
+        document.addEventListener("touchstart", listener);
+        return () => {
+            document.removeEventListener("mousedown", listener);
+            document.removeEventListener("touchstart", listener);
+        };
+    }, [ref, handler]);
+}
+
+
 function RoleSwitcher() {
     const { role, setRole } = useRole();
+    const { isAuthenticated } = useAuth();
 
     const roles: { id: UserRole; label: string; icon: any }[] = [
         { id: "student", label: "Student", icon: GraduationCap },
@@ -48,6 +69,7 @@ function RoleSwitcher() {
 
     const currentRole = roles.find(r => r.id === role) || roles[0];
     const Icon = currentRole.icon;
+
 
     return (
         <DropdownMenu>
@@ -84,9 +106,13 @@ export function TopNavigation() {
     const location = useLocation();
     const navigate = useNavigate();
     const { role } = useRole();
-    const { user, logout } = useAuth();
+    const { isAuthenticated, logout, user } = useAuth();
     const [activeIndex, setActiveIndex] = useState(0);
     const [scrolled, setScrolled] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
     useEffect(() => {
         const handleScroll = () => {
@@ -100,8 +126,8 @@ export function TopNavigation() {
     const getNavItems = () => {
         if (role === "management") {
             return [
-                { label: "Analytics", icon: LineChart, href: "/student-dashboard" },
-                { label: "To Focus", icon: Trophy, href: "/focus" },
+                { label: "Analytics", icon: LineChart, href: "/analytics" },
+                { label: "Trainings", icon: Presentation, href: "/skill-gap" },
             ];
         }
         if (role === "faculty") {
@@ -113,6 +139,7 @@ export function TopNavigation() {
         }
         return [
             { label: "Dashboard", icon: Home, href: "/student-dashboard" },
+            { label: "Pipelined", icon: GitBranch, href: "/pipelined" },
             { label: "My Applications", icon: LineChart, href: "/applications" },
             { label: "Interviews", icon: MessageCircle, href: "/interviews" },
         ];
@@ -124,6 +151,7 @@ export function TopNavigation() {
         const fullPath = location.pathname + location.search;
         let index = navItems.findIndex(item => item.href === fullPath);
         if (index === -1) {
+            // fallback for exact pathname without search
             index = navItems.findIndex(item => item.href.split('?')[0] === location.pathname);
         }
         if (index !== -1) {
@@ -138,43 +166,37 @@ export function TopNavigation() {
 
     const handleLogout = () => {
         logout();
-        navigate("/login", { replace: true });
+        navigate("/");
     };
-
-    // Derive avatar initials from real user
-    const initials = user?.full_name
-        ? user.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-        : "?";
 
     return (
         <header
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 h-[72px] transition-all duration-200",
-                "bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md",
-                "border-b border-slate-200 dark:border-slate-800",
-                scrolled ? "shadow-sm" : ""
+                "sticky top-4 z-[1000] h-[72px] transition-all duration-300",
+                "bg-white/80 dark:bg-slate-950/80 backdrop-blur-[12px]",
+                "border border-black/[0.05] dark:border-white/[0.05]",
+                "rounded-3xl mt-4 mx-auto w-[calc(100%-2rem)] max-w-7xl",
+                "shadow-sm" // Uses the global box-shadow defined in index.css
             )}
         >
-            <div className="container mx-auto h-full px-4 flex items-center justify-between relative">
+            <div className="w-full h-full px-4 md:px-6 flex items-center justify-between relative">
                 {/* Left: Logo */}
-                <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary shrink-0 z-10">
+                <div className="flex items-center gap-2 font-bold text-xl text-primary shrink-0 z-10">
                     <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
                         CC
                     </div>
                     <span className="hidden md:inline-block bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
                         Campus Compass
                     </span>
-                </Link>
+                </div>
 
-                {/* Center: Nav Pill */}
+                {/* Center: The "BottomNavBar" Pill */}
+                {/* Positioned absolutely to center relative to the container */}
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block z-0">
-                    <motion.nav
-                        initial={{ scale: 0.9, opacity: 0, y: -10 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                    <nav
                         className={cn(
-                            "bg-white/50 dark:bg-black/50 backdrop-blur-sm border border-white/20 dark:border-white/10 rounded-full flex items-center p-1 shadow-sm space-x-1",
-                            "h-[52px]"
+                            "relative flex items-center h-full px-2",
+                            "transition-all duration-300"
                         )}
                     >
                         {navItems.map((item, idx) => {
@@ -182,106 +204,111 @@ export function TopNavigation() {
                             const isActive = activeIndex === idx;
 
                             return (
-                                <motion.button
-                                    key={item.label}
-                                    whileTap={{ scale: 0.97 }}
-                                    className={cn(
-                                        "flex items-center gap-0 px-4 py-2 rounded-full transition-all duration-300 relative h-10 min-w-[44px]",
-                                        isActive
-                                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
-                                            : "bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                                        "focus:outline-none focus-visible:ring-0",
+                                <div key={item.label} className="flex items-center">
+                                    {idx > 0 && (
+                                        <div className="h-8 w-[1px] bg-[#DDDDDD] dark:bg-white/10 mx-1" />
                                     )}
-                                    onClick={() => handleNavClick(idx, item.href)}
-                                    aria-label={item.label}
-                                    type="button"
-                                >
-                                    <Icon
-                                        size={20}
-                                        strokeWidth={2.5}
-                                        aria-hidden
-                                        className="transition-colors duration-200"
-                                    />
-
-                                    <motion.div
-                                        initial={false}
-                                        animate={{
-                                            width: isActive ? "auto" : "0px",
-                                            opacity: isActive ? 1 : 0,
-                                            marginLeft: isActive ? "8px" : "0px",
-                                        }}
-                                        transition={{
-                                            width: { type: "spring", stiffness: 350, damping: 32 },
-                                            opacity: { duration: 0.19 },
-                                            marginLeft: { duration: 0.19 },
-                                        }}
-                                        className="overflow-hidden flex items-center"
+                                    <motion.button
+                                        whileTap={{ scale: 0.96 }}
+                                        className={cn(
+                                            "flex items-center gap-0 px-5 py-2 rounded-full transition-all duration-300 relative h-12 min-w-[48px]",
+                                            isActive
+                                                ? "bg-transparent text-[#1D1D1F] dark:text-white font-bold"
+                                                : "bg-transparent text-muted-foreground hover:bg-[#F7F7F7] dark:hover:bg-white/5 hover:text-foreground",
+                                            "focus:outline-none focus-visible:ring-0",
+                                        )}
+                                        onClick={() => handleNavClick(idx, item.href)}
+                                        aria-label={item.label}
+                                        type="button"
                                     >
-                                        <span className="font-semibold text-xs whitespace-nowrap">
-                                            {item.label}
-                                        </span>
-                                    </motion.div>
-                                </motion.button>
+                                        <Icon
+                                            size={18}
+                                            strokeWidth={2.5}
+                                            className="transition-transform duration-300"
+                                        />
+
+                                        <motion.div
+                                            initial={false}
+                                            animate={{
+                                                width: isActive ? "auto" : "0px",
+                                                opacity: isActive ? 1 : 0,
+                                                marginLeft: isActive ? "8px" : "0px",
+                                            }}
+                                            transition={{
+                                                width: { type: "spring", stiffness: 350, damping: 32 },
+                                                opacity: { duration: 0.3 },
+                                                marginLeft: { duration: 0.3 },
+                                            }}
+                                            className="overflow-hidden flex items-center"
+                                        >
+                                            <span className="text-xs whitespace-nowrap">
+                                                {item.label}
+                                            </span>
+                                        </motion.div>
+                                    </motion.button>
+                                </div>
                             );
                         })}
-                    </motion.nav>
+                    </nav>
                 </div>
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-4 shrink-0 z-10">
-                    <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground hidden sm:flex">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background" />
-                    </Button>
+                    <div className="hidden sm:flex">
+                        <NotificationPopover />
+                    </div>
+
+                    <div className="hidden md:block">
+                        <RoleSwitcher />
+                    </div>
 
                     <ModeToggle />
 
-                    {/* User avatar + dropdown */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button className="flex items-center gap-2 pl-2 border-l border-muted focus:outline-none">
-                                <Avatar className="h-9 w-9 border-2 border-background ring-2 ring-muted cursor-pointer hover:ring-primary/50 transition-all">
-                                    <AvatarImage src={undefined} alt={user?.full_name ?? "User"} />
-                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
-                                        {initials}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="hidden lg:flex flex-col items-start">
-                                    <span className="text-xs font-semibold leading-tight text-foreground max-w-[90px] truncate">
-                                        {user?.full_name ?? "Guest"}
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground capitalize">
-                                        {user?.role ?? ""}
-                                    </span>
+                    <div className="flex items-center gap-3 pl-2 border-l border-muted relative" ref={dropdownRef}>
+                        <div onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                            <Avatar className="h-9 w-9 border-2 border-background ring-2 ring-muted cursor-pointer hover:ring-primary/50 transition-all">
+                                <AvatarImage src={(user as any)?.picture || "/placeholder-user.jpg"} alt={(user as any)?.displayName || "User"} />
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold shadow-sm select-none">
+                                    {(user?.full_name || (user as any)?.displayName || (user as any)?.givenName || "HA").substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                        </div>
+                        {isDropdownOpen && (
+                            <div className="absolute top-12 right-0 mt-2 w-56 rounded-xl border bg-popover text-popover-foreground shadow-lg shadow-black/5 outline-none animate-in fade-in-0 zoom-in-95">
+                                <div className="px-4 py-3 border-b">
+                                    <p className="text-sm font-semibold truncate leading-none mb-1">
+                                        {(user as any)?.displayName || user?.full_name || "Student User"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate leading-none">
+                                        {user?.email || "student@example.com"}
+                                    </p>
                                 </div>
-                                <ChevronDown className="h-3 w-3 text-muted-foreground hidden lg:block" />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                            <DropdownMenuLabel className="font-normal">
-                                <div className="flex flex-col space-y-0.5">
-                                    <span className="font-semibold text-sm">{user?.full_name ?? "Guest"}</span>
-                                    <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                                <div className="p-1">
+                                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground">
+                                        <User className="mr-2 h-4 w-4" />
+                                        View Full Profile
+                                    </Link>
                                 </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="gap-2 cursor-pointer">
-                                <Settings className="h-4 w-4" />
-                                Settings
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                id="logout-btn"
-                                className="gap-2 cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
-                                onClick={handleLogout}
-                            >
-                                <LogOut className="h-4 w-4" />
-                                Log out
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                <div className="h-px bg-muted" />
+                                <div className="p-1">
+                                    <button
+                                        onClick={() => {
+                                            setIsDropdownOpen(false);
+                                            localStorage.removeItem('cpas_tokens');
+                                            handleLogout();
+                                        }}
+                                        className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-destructive/10 text-destructive focus:bg-accent focus:text-accent-foreground"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        Logout
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>
     );
 }
+

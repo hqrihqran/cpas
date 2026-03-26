@@ -101,7 +101,7 @@ export default function Students() {
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Student Tracking</h1>
+              <h1 className="text-2xl font-bold">Student Tracking</h1>
               <p className="text-muted-foreground">Manage and track student placements.</p>
             </div>
 
