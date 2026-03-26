@@ -22,7 +22,7 @@ export function ManagementView() {
     return (
         <div className="space-y-8 animate-fade-in pb-8">
             <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Position Tracking</h1>
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Position Tracking</h1>
             </div>
 
             {/* KPI Row */}
@@ -222,7 +222,7 @@ function StrategyKPI({ title, value, subtext, icon, trend, bg, trendNegative }: 
                     )}
                 </div>
                 <div>
-                    <h3 className="text-2xl font-bold tracking-tight text-foreground">{value}</h3>
+                    <h3 className="text-2xl font-bold text-foreground">{value}</h3>
                     <p className="text-sm font-medium text-muted-foreground mt-1">{title}</p>
                 </div>
                 {subtext && (

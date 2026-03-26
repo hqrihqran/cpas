@@ -50,9 +50,9 @@ export function FacultyStudents() {
     });
 
     return (
-        <div className="space-y-6 animate-fade-in p-6 lg:p-8 flex flex-col h-[calc(100vh-6rem)]">
+        <div className="space-y-6 animate-fade-in p-6 lg:p-8 pt-0 lg:pt-0 flex flex-col h-[calc(100vh-6rem)]">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h1 className="text-3xl font-extrabold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+                <h1 className="text-3xl font-extrabold text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                     Student Skill Monitoring
                 </h1>
                 <Button variant="outline" className="gap-2 glass-panel border-white/20 bg-background/50 shadow-sm">
@@ -168,8 +168,8 @@ export function FacultyStudents() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className={`text-xs font-bold inline-flex items-center justify-center px-2 py-1 rounded-full border shadow-sm ${student.placementStatus === "Placed" ? "bg-green-500/20 text-green-600 border-green-500/30" :
-                                                student.placementStatus === "Unplaced" ? "bg-red-500/20 text-red-600 border-red-500/30" :
-                                                    "bg-yellow-500/20 text-yellow-600 border-yellow-500/30"
+                                            student.placementStatus === "Unplaced" ? "bg-red-500/20 text-red-600 border-red-500/30" :
+                                                "bg-yellow-500/20 text-yellow-600 border-yellow-500/30"
                                             }`}>
                                             {student.placementStatus}
                                         </div>

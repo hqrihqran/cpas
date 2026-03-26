@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Send, CheckCircle2, Clock, Users } from "lucide-react";
+import { Plus, Send, CheckCircle2, Clock, Users, Trash2 } from "lucide-react";
 import { addTask, mockHomeworkTasks, HomeworkTask, students } from "@/data/mockData";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export function FacultyHomework() {
     const { toast } = useToast();
@@ -15,6 +16,7 @@ export function FacultyHomework() {
     const [deadline, setDeadline] = useState("");
     const [assignedTo, setAssignedTo] = useState<string[]>([]);
     const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+    const [showAllTasks, setShowAllTasks] = useState(false);
 
     const [tasks, setTasks] = useState<HomeworkTask[]>(mockHomeworkTasks);
 
@@ -58,9 +60,34 @@ export function FacultyHomework() {
         });
     };
 
+    const handleDeleteTask = async (taskId: string | number) => {
+        if (window.confirm("Confirm Delete?")) {
+            // Optimistic update
+            setTasks(prev => prev.filter(t => t.id !== taskId));
+
+            try {
+                const tokenString = localStorage.getItem("cpas_tokens");
+                const token = tokenString ? JSON.parse(tokenString).access_token : "";
+
+                // Calling the mentor endpoint mapped in backend
+                await fetch(`/api/mentor/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                toast({
+                    title: "Task Deleted",
+                    description: "The task was successfully removed.",
+                });
+            } catch (error) {
+                console.error("Failed to delete task:", error);
+            }
+        }
+    };
+
     return (
-        <div className="space-y-8 animate-fade-in p-6 lg:p-8">
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+        <div className="space-y-8 animate-fade-in p-6 lg:p-8 pt-0 lg:pt-0">
+            <h1 className="text-3xl font-extrabold text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                 Homework Hub
             </h1>
 
@@ -116,12 +143,24 @@ export function FacultyHomework() {
 
                 {/* Sent Tasks Status Tracker (Right) */}
                 <div className="lg:col-span-7 space-y-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-primary rounded-full"></span>
-                        Sent Tasks Status
-                    </h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+                            Sent Tasks Status
+                        </h3>
+                        <Button
+                            variant="outline"
+                            className="rounded-full border-[#3b82f6] text-[#3b82f6] bg-transparent hover:bg-[#3b82f6] hover:text-white transition-all shadow-sm"
+                            onClick={() => setShowAllTasks(!showAllTasks)}
+                        >
+                            {showAllTasks ? "Show Less" : "View All"}
+                        </Button>
+                    </div>
 
-                    <div className="flex flex-col gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className={cn(
+                        "flex flex-col gap-6 overflow-y-auto pr-3 custom-scrollbar transition-all duration-300",
+                        showAllTasks ? "max-h-[85vh]" : "max-h-[500px]"
+                    )}>
                         {tasks.filter(t => t.assignedTo.length === 0 || t.completedBy.length < t.assignedTo.length).map(task => {
                             const completionRate = task.assignedTo.length
                                 ? Math.round((task.completedBy.length / task.assignedTo.length) * 100)
@@ -131,18 +170,28 @@ export function FacultyHomework() {
                             return (
                                 <Card
                                     key={task.id}
-                                    className="glass-panel border-white/20 shadow-sm rounded-2xl bg-card/40 backdrop-blur-md hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                                    className="glass-panel border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.05)] rounded-2xl bg-card/40 backdrop-blur-md hover:shadow-md transition-all cursor-pointer overflow-hidden mb-5"
                                     onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
                                 >
-                                    <CardContent className="p-5">
+                                    <CardContent className="p-6">
                                         <div className="flex justify-between items-start mb-3">
-                                            <div>
+                                            <div className="flex-1 pr-4">
                                                 <h4 className="font-bold text-lg text-foreground">{task.title}</h4>
                                                 <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.description}</p>
                                             </div>
-                                            <Badge variant="outline" className="bg-background/50 border-white/20 whitespace-nowrap">
-                                                Due: {task.deadline}
-                                            </Badge>
+                                            <div className="flex flex-col items-end gap-2 shrink-0">
+                                                <Trash2
+                                                    size={18}
+                                                    className="text-muted-foreground hover:text-red-500 cursor-pointer transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteTask(task.id);
+                                                    }}
+                                                />
+                                                <Badge variant="outline" className="bg-background/50 border-white/20 whitespace-nowrap">
+                                                    Due: {task.deadline}
+                                                </Badge>
+                                            </div>
                                         </div>
 
                                         {/* Status Metrics */}

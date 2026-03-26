@@ -7,7 +7,8 @@ import {
     ReactNode,
 } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+// All API calls go through the Vite proxy (/api/* → localhost:5000)
+const API_BASE = "";
 
 export interface AuthUser {
     id: number;
@@ -86,23 +87,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const login = useCallback(async (email: string, password: string) => {
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+        let res: Response;
+        try {
+            res = await fetch(`${API_BASE}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
+        } catch {
+            throw new Error("Network Error: Cannot connect to the server. Make sure Flask is running.");
+        }
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Login failed");
+        if (!res.ok) throw new Error(data.error ?? "Invalid email or password");
         _persistSession(data);
     }, [_persistSession]);
 
     const register = useCallback(
         async (email: string, password: string, full_name: string, role: string) => {
-            const res = await fetch(`${API_BASE}/api/auth/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, full_name, role }),
-            });
+            let res: Response;
+            try {
+                res = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password, full_name, role }),
+                });
+            } catch {
+                throw new Error("Network Error: Cannot connect to the server. Make sure Flask is running.");
+            }
             const data = await res.json();
             if (!res.ok) throw new Error(data.error ?? "Registration failed");
             _persistSession(data);
@@ -118,13 +129,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const body: Record<string, string> = { credential };
         if (role) body.role = role;
 
-        const res = await fetch(`${API_BASE}/api/auth/google`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
+        let res: Response;
+        try {
+            res = await fetch(`${API_BASE}/api/auth/google`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+        } catch {
+            // fetch() itself threw — server unreachable
+            throw new Error("Network Error: Cannot reach the server. Is Flask running?");
+        }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Google login failed");
+
+        if (!res.ok) {
+            // Surface the specific backend error cleanly
+            const msg = data?.error ?? "Google sign-in failed";
+            throw new Error(msg);
+        }
 
         // Backend signals that a role must be chosen before user creation
         if (data.needs_role) {

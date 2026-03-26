@@ -21,6 +21,8 @@ import Students from "./pages/Students";
 import Companies from "./pages/Companies";
 import DataManagement from "./pages/DataManagement";
 import Reports from "./pages/Reports";
+import Pipelined from "./pages/Pipelined";
+import SkillGapTrainings from "./pages/SkillGapTrainings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,7 +42,7 @@ const App = () => (
           <RoleProvider>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<LoginSignup />} />
               <Route path="/login" element={<LoginSignup />} />
 
               {/* Protected: any authenticated user */}
@@ -57,6 +59,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <DashboardLayout><StudentDashboard /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pipelined"
+                element={
+                  <ProtectedRoute allowedRoles={["student"]}>
+                    <DashboardLayout><Pipelined /></DashboardLayout>
                   </ProtectedRoute>
                 }
               />
@@ -107,6 +117,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={["faculty", "admin", "management"]}>
                     <DashboardLayout><Analytics /></DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/skill-gap"
+                element={
+                  <ProtectedRoute allowedRoles={["management", "admin"]}>
+                    <DashboardLayout><SkillGapTrainings /></DashboardLayout>
                   </ProtectedRoute>
                 }
               />

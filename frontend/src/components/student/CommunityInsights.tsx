@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, MessageSquare, ThumbsUp, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+const API_BASE = ""; // Vite proxy forwards /api/* → http://localhost:5000
 
 interface Insight {
     id: number;
@@ -75,9 +79,12 @@ const initialInsights: Insight[] = [
 ];
 
 export function CommunityInsights() {
+    const { tokens } = useAuth();
+    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
-    const [insights, setInsights] = useState<Insight[]>(initialInsights);
+    const [insights, setInsights] = useState<Insight[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [newInsight, setNewInsight] = useState<{
         company: string;
         role: string;
@@ -89,6 +96,33 @@ export function CommunityInsights() {
         type: "Interview",
         content: ""
     });
+
+    const fetchInsights = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/insights/`);
+            if (res.ok) {
+                const data = await res.json();
+                const formatted = data.map((item: any) => ({
+                    id: item.id,
+                    studentName: item.student_name || "Anonymous",
+                    company: item.company,
+                    role: item.role,
+                    date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recently",
+                    type: item.type,
+                    content: item.content,
+                    likes: item.likes || 0,
+                    comments: 0
+                }));
+                setInsights(formatted);
+            }
+        } catch (error) {
+            console.error("Failed to fetch insights", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchInsights();
+    }, []);
 
     const filteredInsights = insights.filter(
         (insight) =>
@@ -109,24 +143,34 @@ export function CommunityInsights() {
         setExpandedIds(newSet);
     };
 
-    const handleAddInsight = () => {
-        if (!newInsight.company || !newInsight.role || !newInsight.content) return;
+    const handleAddInsight = async () => {
+        if (!newInsight.company || !newInsight.content) return;
+        setIsSubmitting(true);
 
-        const insight: Insight = {
-            id: insights.length + 1,
-            studentName: "Hariharan A", // Assuming logged-in user
-            company: newInsight.company,
-            role: newInsight.role,
-            date: "Just now",
-            type: newInsight.type,
-            content: newInsight.content,
-            likes: 0,
-            comments: 0
-        };
+        try {
+            const res = await fetch(`${API_BASE}/api/interviews/share`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${tokens?.access_token}`
+                },
+                body: JSON.stringify(newInsight)
+            });
 
-        setInsights([insight, ...insights]);
-        setIsDialogOpen(false);
-        setNewInsight({ company: "", role: "", type: "Interview", content: "" });
+            if (res.status === 201) {
+                toast({ title: "Experience Shared Successfully!", variant: "default" });
+                setIsDialogOpen(false);
+                setNewInsight({ company: "", role: "", type: "Interview", content: "" });
+                fetchInsights(); // Refresh the list
+            } else {
+                const data = await res.json();
+                toast({ title: data.error || "Failed to post experience", variant: "destructive" });
+            }
+        } catch (error) {
+            toast({ title: "Network error", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -143,7 +187,7 @@ export function CommunityInsights() {
                             Add Experience
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent className="sm:max-w-[750px]">
                         <DialogHeader>
                             <DialogTitle>Share Your Experience</DialogTitle>
                             <DialogDescription>
@@ -194,7 +238,7 @@ export function CommunityInsights() {
                                 <Textarea
                                     id="content"
                                     placeholder="Share the questions asked, difficulty level, and your approach..."
-                                    className="min-h-[100px]"
+                                    className="min-h-[250px] resize-y"
                                     value={newInsight.content}
                                     onChange={(e) => setNewInsight({ ...newInsight, content: e.target.value })}
                                 />
@@ -202,7 +246,9 @@ export function CommunityInsights() {
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleAddInsight} disabled={!newInsight.company || !newInsight.content}>Post</Button>
+                            <Button onClick={handleAddInsight} disabled={!newInsight.company || !newInsight.content || isSubmitting}>
+                                {isSubmitting ? "Posting..." : "Post"}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

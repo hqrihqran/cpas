@@ -8,6 +8,7 @@ Front-end consumers:
 """
 from flask import Blueprint, request, jsonify
 from ..db import query_db, execute_db
+from ..notifications import save_and_emit
 
 companies_bp = Blueprint("companies", __name__)
 
@@ -85,6 +86,26 @@ def create_company():
     ))
     _insert_company_skills(new_id, data.get("required_skills", []))
     _insert_ctc_breakdown(new_id, data.get("ctc_breakdown", []))
+
+    # ── Notify all Students of a new job offer ──────────────────────────────
+    try:
+        save_and_emit(
+            event="new_notification",
+            notif_type="Job",
+            title=f"New Job Offer: {data['name']}",
+            message=(
+                f"{data['name']} is now hiring for {data.get('role', 'multiple roles')}. "
+                f"CTC: {data.get('salary_range', 'N/A')} | "
+                f"Location: {data.get('location', 'N/A')}"
+            ),
+            user_id=None,          # broadcast – not tied to one user
+            target_role="Student",
+            room="role_Student",    # all students in this room
+            broadcast=False,
+        )
+    except Exception as e:
+        print(f"[Notifications] Failed to emit new_job: {e}")
+
     return jsonify({"message": "Company created", "id": new_id}), 201
 
 

@@ -236,15 +236,29 @@ def google_login():
             "google_email": email,
         }), 200
 
-    # Phase 2: role provided – resolve and create the user
+    # Phase 2: role provided – resolve, create user, return tokens
     db_role = ROLE_MAP_REVERSE.get(raw_role.lower(), raw_role)
     if db_role not in VALID_ROLES:
-        return jsonify({"error": f"Invalid role. Valid: {list(VALID_ROLES)}"}), 400
+        return jsonify({
+            "error": f"Invalid role '{raw_role}'. Please choose one of: Student, Faculty, Management, Admin."
+        }), 400
 
-    new_id = execute_db(
-        "INSERT INTO users (email, password_hash, full_name, role, google_id) VALUES (%s, %s, %s, %s, %s)",
-        (email, "", full_name, db_role, google_id)
-    )
+    try:
+        # Try full insert including google_id (requires auth migration to have been run)
+        new_id = execute_db(
+            "INSERT INTO users (email, password_hash, full_name, role, google_id) VALUES (%s, %s, %s, %s, %s)",
+            (email, "", full_name, db_role, google_id)
+        )
+    except Exception:
+        # Fallback: google_id column may not exist yet — insert without it
+        try:
+            new_id = execute_db(
+                "INSERT INTO users (email, password_hash, full_name, role) VALUES (%s, %s, %s, %s)",
+                (email, "", full_name, db_role)
+            )
+        except Exception as inner_e:
+            return jsonify({"error": f"Account creation failed: {str(inner_e)}"}), 500
+
     user = query_db(
         "SELECT id, email, full_name, role, student_id FROM users WHERE id=%s",
         (new_id,), one=True
